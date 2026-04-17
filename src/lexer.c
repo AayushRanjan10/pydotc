@@ -167,7 +167,7 @@ Token get_next_token() {
         }
         else if (c == '=') {
             if (src[pos+1] == '=') {
-                tok.type = ASSIGN; 
+                tok.type = EQEQUAL; 
                 strcpy(tok.value, "==");
                 pos += 2;
                 return tok;
@@ -221,6 +221,7 @@ Token get_next_token() {
                 curr++;
                 pos++;  
             }
+            pos++;
             *curr = '\0';
             strcpy(tok.value, str);
             return tok;
@@ -230,20 +231,19 @@ Token get_next_token() {
         if (isalpha(src[pos]) || src[pos] == '_') {
             char id[1000];
             char *curr = id;
-            pos++;
-            while (src[pos]!=' ') {
+            while (isalnum(src[pos]) || src[pos] == '_') {
                 *curr = src[pos];
                 curr++;
                 pos++;  
             }
             *curr = '\0';
+            strcpy(tok.value, id);
             if (strcmp(tok.value, "print") == 0) tok.type = PRINT;
             else if (strcmp(tok.value, "while") == 0) tok.type = WHILE;
             else if (strcmp(tok.value, "if") == 0) tok.type = IF;
             else if (strcmp(tok.value, "elif") == 0) tok.type = ELIF;            
             else if (strcmp(tok.value, "else") == 0) tok.type = ELSE;
             else tok.type = IDENTIFIER;
-            strcpy(tok.value, id);
             return tok;
         }
 

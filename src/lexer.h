@@ -16,6 +16,7 @@ typedef enum {
     GT,
     LTE,
     GTE,
+    EQEQUAL,
     NOTEQUAL,
 
     PRINT,
