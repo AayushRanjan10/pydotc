@@ -1,0 +1,6 @@
+*.o
+*.out
+*.exe
+pydotc
+
+.DS_Store
