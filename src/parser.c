@@ -16,7 +16,7 @@ static void eat(TokenType expected_type) {
         advance();
     }
     else {
-        printf("Syntax Error");
+        printf("Syntax Error\n");
         exit(1); 
     }
 }
@@ -62,8 +62,14 @@ static ASTNode* parse_factor() {
         eat(RPAREN);
         return node;
     }
+    else if (tok.type == STRING) {
+        eat(STRING);
+        ASTNode* node = create_node(AST_STRING);
+        strcpy(node->data.string_value, tok.value);
+        return node;
+    }
     else {
-        printf("Syntax Error");
+        printf("Syntax Error\n");
         exit(1); 
     }
 }

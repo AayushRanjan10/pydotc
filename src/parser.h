@@ -5,6 +5,7 @@
 
 typedef enum {
     AST_NUMBER,
+    AST_STRING,
     AST_IDENTIFIER,
     AST_BINOP,
     AST_ASSIGN,
@@ -22,6 +23,9 @@ typedef struct ASTNode {
     union {
         // If type == AST_NUMBER, we use this:
         double number_value; 
+
+        // If type == AST_STRING, we use this:
+        char string_value[1000];
         
         // If type == AST_IDENTIFIER, we use this:
         char variable_name[100]; 
