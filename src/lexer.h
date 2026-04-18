@@ -18,6 +18,7 @@ typedef enum {
     GTE,
     EQEQUAL,
     NOTEQUAL,
+    COLON,
 
     PRINT,
     WHILE,

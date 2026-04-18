@@ -23,6 +23,7 @@ void init_lexer(const char* source_code) {
     has_peeked = 0;
 }
 
+// Needed for parser
 Token peek_next_token() {
     if (!has_peeked) {
         peeked_token = get_next_token();
@@ -104,6 +105,12 @@ Token get_next_token() {
         if (c==')') {
             tok.type = RPAREN;
             strcpy(tok.value, ")");
+            pos++;
+            return tok;
+        }
+        if (c == ':') {
+            tok.type = COLON;
+            strcpy(tok.value, ":");
             pos++;
             return tok;
         }
