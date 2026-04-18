@@ -76,4 +76,5 @@ typedef struct ASTNode {
 
 void init_parser(const char* source_code);
 ASTNode* parse_program();
+void free_ast(ASTNode* node);
 #endif

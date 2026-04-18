@@ -20,20 +20,19 @@ int main(int argc, char** argv) {
     // Create a massive string (capable of holding 64 KB of text)
     static char source_code[65536]; 
     
-    // Read the file into our string array and null-terminate it
+    // Read the file into our string array using fread and null-terminate it
     size_t bytes_read = fread(source_code, 1, sizeof(source_code) - 1, file);
     source_code[bytes_read] = '\0'; 
     
     fclose(file);
 
     // Run the interpreter
-    printf("--- Compiling Code ---\n");
     init_parser(source_code);
     ASTNode* root = parse_program();
-    printf("AST Built Successfully!\n\n");
 
-    printf("--- Executing Program ---\n");
     eval_program(root);
+
+    free_ast(root);
 
     return 0;
 }

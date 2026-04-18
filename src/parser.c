@@ -49,6 +49,22 @@ static ASTNode* parse_factor() {
         node->data.number_value = strtod(tok.value, NULL); 
         return node;
     }
+    else if (tok.type == MINUS) {     // For negative numbers (Unary Minus), treat -5 as 0-5
+        eat(MINUS);
+        // Create a fake 0
+        ASTNode* zero_node = create_node(AST_NUMBER);
+        zero_node->data.number_value = 0;
+        
+        // Create standard subtraction: 0 - (whatever factor comes next)
+        ASTNode* node = create_node(AST_BINOP);
+        node->data.binop.left = zero_node;
+        node->data.binop.operator_type = MINUS;
+        
+        node->data.binop.right = parse_factor(); 
+        
+        return node;
+    }
+    
     else if (tok.type == IDENTIFIER) {
         eat(IDENTIFIER);
         ASTNode* node = create_node(AST_IDENTIFIER);
@@ -211,7 +227,6 @@ static ASTNode* parse_statement() {
         eat(RPAREN);
         return node;
     }
-
     
     // We check if it's an identifier, and then PEEK ahead to see if an '=' comes next.
     if (current_token.type == IDENTIFIER) {
@@ -228,12 +243,12 @@ static ASTNode* parse_statement() {
         }
     }
     
-    // Fallback: Standalone Expression (e.g., just typing "5 + 3" or "x + 2")
+    // Fallback: Standalone Expression (just typing "5 + 3" or "x + 2")
     // If it's not a print or an assignment, route it straight to the math engine.
     ASTNode* node = parse_comparison();
     return node;
 }
-
+// BODMAS Hierarchy: from lowest priority to highest: parse_comparison (<, ==) -> parse_expression (+, -) -> parse_term (*, /) -> parse_power (**) (Recursive Descent)
 
 void init_parser(const char* source_code) {
     init_lexer(source_code);
@@ -266,4 +281,45 @@ ASTNode* parse_program() {
     }
     return program_node;
 
+}
+
+void free_ast(ASTNode* node) {
+    if (node == NULL) return;
+
+    // Recursive - Free the next statement in the linked list
+    free_ast(node->next);
+
+    // Free any children hanging off of this specific node
+    switch (node->type) {
+        case AST_BINOP:
+            free_ast(node->data.binop.left);
+            free_ast(node->data.binop.right);
+            break;
+        case AST_ASSIGN:
+            free_ast(node->data.assign.value);
+            break;
+        case AST_PRINT:
+            free_ast(node->data.print_stmt.expression);
+            break;
+        case AST_IF:
+            free_ast(node->data.if_stmt.condition);
+            free_ast(node->data.if_stmt.if_body);
+            free_ast(node->data.if_stmt.else_body);
+            break;
+        case AST_WHILE:
+            free_ast(node->data.while_stmt.condition);
+            free_ast(node->data.while_stmt.loop_body);
+            break;
+        case AST_BLOCK:
+        case AST_PROGRAM:
+            free_ast(node->data.program.head_statement);
+            break;
+        case AST_NUMBER:
+        case AST_STRING:
+        case AST_IDENTIFIER: // These don't have any child pointers
+            break;
+    }
+
+    // Once all the children are safely destroyed, free the node itself
+    free(node);
 }

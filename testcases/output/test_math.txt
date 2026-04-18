@@ -1,0 +1,18 @@
+10 + 2 * 3 (Should be 16):
+16
+(10 + 2) * 3 (Should be 36):
+36
+100 // 3 % 4 (Should be 1, tests left-associativity):
+1
+50 - 10 / 2 + 5 * 2 (Should be 55):
+55
+2 ** 3 ** 2 (Should be 512 tests right-associativity of **):
+512
+(2 ** 3) ** 2 (Should be 64):
+64
+-5 + 2 * -3 (Should be -11):
+-11
+25 ** (1/2) (Should be 5):
+5
+6 * -3 (Should be -18):
+-18

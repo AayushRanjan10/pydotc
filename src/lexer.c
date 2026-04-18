@@ -50,7 +50,7 @@ Token get_next_token() {
             continue;
         }
 
-        // Starting a new line
+        // Starting a new line; we count the spaces at the start of a newline to determine if we are stepping into a block (INDENT) or stepping out of a block (DEDENT).
         if (c=='\n') {
             pos++;
             int spaces = 0;
@@ -105,6 +105,12 @@ Token get_next_token() {
         if (c==')') {
             tok.type = RPAREN;
             strcpy(tok.value, ")");
+            pos++;
+            return tok;
+        }
+        if (c == '%') {
+            tok.type = MODULUS;
+            strcpy(tok.value, "%");
             pos++;
             return tok;
         }
