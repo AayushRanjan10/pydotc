@@ -9,6 +9,9 @@ typedef enum {
     AST_BINOP,
     AST_ASSIGN,
     AST_PRINT,
+    AST_BLOCK,
+    AST_IF,
+    AST_WHILE,
     AST_PROGRAM
 } ASTNodeType;
 
@@ -40,6 +43,24 @@ typedef struct ASTNode {
         struct {
             struct ASTNode* expression; 
         } print_stmt;
+
+        // If type == AST_BLOCK
+        struct {
+            struct ASTNode* head_statement;
+        } block;
+
+        // If type == AST_IF
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* if_body;
+            struct ASTNode* else_body; // Can be a block (ELSE), or another nested AST_IF (IF ELSE) - We are treating elif as else if.
+        } if_stmt;
+
+        // If type == AST_WHILE
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* loop_body;
+        } while_stmt;
 
         // If type == AST_PROGRAM
         struct {

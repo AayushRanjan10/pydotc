@@ -23,7 +23,7 @@ static void eat(TokenType expected_type) {
 
 // Allocates memory for a new AST Node on the heap
 static ASTNode* create_node(ASTNodeType type) {
-    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    ASTNode* node = (ASTNode*) malloc(sizeof(ASTNode));
     node->type = type;
     node->next = NULL;
     return node;
@@ -31,10 +31,14 @@ static ASTNode* create_node(ASTNodeType type) {
 
 // We must declare these here because they constantly call each other
 static ASTNode* parse_statement();
+static ASTNode* parse_comparison();
 static ASTNode* parse_expression();
 static ASTNode* parse_term();
 static ASTNode* parse_power();
 static ASTNode* parse_factor();
+static ASTNode* parse_block();
+static ASTNode* parse_if_statement();
+static ASTNode* parse_while_statement();
 
 
 static ASTNode* parse_factor() {
@@ -108,15 +112,100 @@ static ASTNode* parse_expression() {
     return node;
 }
 
+static ASTNode* parse_comparison() {
+    ASTNode* node = parse_expression();
+    if (current_token.type == LT || current_token.type == GT || current_token.type == LTE || current_token.type == GTE || current_token.type == EQEQUAL || current_token.type == NOTEQUAL) {
+        TokenType op = current_token.type;
+        eat(op);
+        ASTNode* new_node = create_node(AST_BINOP);
+        new_node->data.binop.left = node;
+        new_node->data.binop.operator_type = op;
+        new_node->data.binop.right = parse_expression();
+        node = new_node;
+    }
+    return node;
+}
+
+
+static ASTNode* parse_block() {
+    ASTNode* block_node = create_node(AST_BLOCK);
+    block_node->data.block.head_statement = NULL;
+    ASTNode* current_tail = NULL;
+
+    if (current_token.type == NEWLINE) eat(NEWLINE);
+    eat(INDENT);
+    
+    while (current_token.type != DEDENT && current_token.type != END_OF_FILE) {
+        if (current_token.type == NEWLINE) {
+            eat(NEWLINE);
+            continue;
+        }
+        ASTNode* stmt = parse_statement();
+        if (block_node->data.block.head_statement == NULL) {
+            block_node->data.block.head_statement = stmt;
+            current_tail = stmt;
+        } else {
+            current_tail->next = stmt;
+            current_tail = stmt;
+        }
+    }
+    
+    if (current_token.type == DEDENT) {
+        eat(DEDENT);
+    }
+    
+    return block_node;
+}
+
+static ASTNode* parse_while_statement() {
+    eat(WHILE);
+    ASTNode* node = create_node(AST_WHILE);
+    node->data.while_stmt.condition = parse_comparison();
+    eat(COLON);
+    node->data.while_stmt.loop_body = parse_block();
+    return node;
+}
+
+static ASTNode* parse_if_statement() {
+    eat(IF);
+    ASTNode* node = create_node(AST_IF);
+    node->data.if_stmt.condition = parse_comparison();
+    node->data.if_stmt.else_body = NULL;
+    
+    eat(COLON);
+    node->data.if_stmt.if_body = parse_block();
+    
+    // Treat ELIF as a nested IF statement
+    if (current_token.type == ELIF) {
+        current_token.type = IF;
+        node->data.if_stmt.else_body = parse_if_statement();
+    }
+    // Standard ELSE block
+    else if (current_token.type == ELSE) {
+        eat(ELSE);
+        eat(COLON);
+        node->data.if_stmt.else_body = parse_block();
+    }
+    
+    return node;
+}
+
 static ASTNode* parse_statement() {
+     if (current_token.type == IF) {
+        return parse_if_statement();
+    }
+    if (current_token.type == WHILE) {
+        return parse_while_statement();
+    }
     if (current_token.type == PRINT) {
         eat(PRINT);
         eat(LPAREN);
         ASTNode* node = create_node(AST_PRINT);
-        node->data.print_stmt.expression = parse_expression(); 
+        node->data.print_stmt.expression = parse_comparison(); 
         eat(RPAREN);
         return node;
     }
+
     
     // We check if it's an identifier, and then PEEK ahead to see if an '=' comes next.
     if (current_token.type == IDENTIFIER) {
@@ -128,16 +217,17 @@ static ASTNode* parse_statement() {
             eat(IDENTIFIER);
             eat(ASSIGN);
             // The value is whatever math comes after the '='
-            node->data.assign.value = parse_expression(); 
+            node->data.assign.value = parse_comparison(); 
             return node;
         }
     }
     
     // Fallback: Standalone Expression (e.g., just typing "5 + 3" or "x + 2")
     // If it's not a print or an assignment, route it straight to the math engine.
-    ASTNode* node = parse_expression();
+    ASTNode* node = parse_comparison();
     return node;
 }
+
 
 void init_parser(const char* source_code) {
     init_lexer(source_code);
